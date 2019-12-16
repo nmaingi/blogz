@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+z
 
 {% block content %}
 <h1>My Blogs</h1>
@@ -6,7 +7,7 @@
 {%for each in blog%}
   <ul>
     <li>
-      <a href="/myblog?id={{each.id}}"><h3>{{each.title}}</h3></a>
+      <a href="/blogs?id={{each.id}}"><h3>{{each.title}}</h3></a>
       <p>{{each.content}}</p>
     </li>
  </ul>

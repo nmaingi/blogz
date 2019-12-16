@@ -32,7 +32,7 @@ class User(db.Model):
 #home page conditions
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'index', 'allpost','signup']
+    allowed_routes = ['login', 'index', 'blog_list','sign_up']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
@@ -42,13 +42,6 @@ def index():
     users = User.query.all()
     return render_template('home.html', users = users)
 
-
-#lists all the posts
-@app.route('/allpost')
-def blog_list():
-    blogs = Blog.query.all()
-    return render_template('allpost.html', blogs = blogs, title="All posts")
-        
 #login in to get to write post and view posts
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -79,15 +72,36 @@ def login():
     
     return render_template('login.html',username = username, username_error = username_error, password_error = password_error)
 #lists individual blog page
-@app.route('/myblogs')
-def my_blogs():
-    user_id = request.args.get('id')
-    blogs=Blog.query.get(user_id)
-    return render_template('userblogs.html',blogs=blogs)
+@app.route('/blogs', methods=['POST', 'GET'])
+def blog_listing():
+    title = ""
+
+    if session:
+        owner = User.query.filter_by(username = session['username']).first()
+
+    if "id" in request.args:
+        post_id = request.args.get('id')
+        blog = Blog.query.filter_by(id = post_id).all()
+        return render_template('allposts.html', title = "Our blogs", blog = blog, post_id = post_id)
+
+    elif "user" in request.args:
+        user_id = request.args.get('user')
+        blog = Blog.query.filter_by(owner_id = user_id).all()
+        return render_template('allposts.html', title = "My blogs", blog = blog)
+
+    else:
+        blog = Blog.query.order_by(Blog.id.desc()).all()
+        return render_template('allposts.html', title = "All blogs", blog = blog)
 
 #sign up page routed from login page
 @app.route('/signup', methods=['POST','GET'])
 def sign_up():   
+    username=""
+    username_error=""
+    password_error=""
+    password2_error=""
+    blank=""
+    
     if request.method=="POST":
         username=request.form['username']
         password=request.form['password']
@@ -96,7 +110,6 @@ def sign_up():
         password_error=""
         password2_error=""
         blank=""
-        username=""
         existing_user = User.query.filter_by(username = username).first()
         
         if username==blank:
@@ -131,10 +144,12 @@ def sign_up():
                 new_user = User(username, password)
                 db.session.add(new_user)
                 db.session.commit()
-                return render_template('newblog.html')
+                username = session['username']              
+                return redirect('/newpost')
             else:
                 username_error = "Username is already claimed."
-    return render_template('signup.html')
+    
+    return render_template('signup.html',username=username, username_error=username_error, password_error=password_error, password2_error=password2_error)
 
 #new post page routed from login and only accessed after login
 @app.route('/newpost', methods=['POST', 'GET'])
@@ -157,7 +172,9 @@ def new_post():
             new_post = Blog(blog_title, blog_content, owner)
             db.session.add(new_post)
             db.session.commit()
-            return redirect('/myblogs?id={}'.format(new_post.id) )
+            eachblog_id=Blog.query.order_by(Blog.id.desc()).first()
+            user=owner
+            return redirect('/blogs')
 
     return render_template('newblog.html')
 
@@ -165,7 +182,7 @@ def new_post():
 @app.route('/logout')
 def logout():
     del session['username']
-    return redirect('/home')
+    return redirect('/')
 
 if __name__=="__main__":
     app.run()

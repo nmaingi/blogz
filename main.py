@@ -82,16 +82,16 @@ def blog_listing():
     if "id" in request.args:
         post_id = request.args.get('id')
         blog = Blog.query.filter_by(id = post_id).all()
-        return render_template('allposts.html', title = "Our blogs", blog = blog, post_id = post_id)
+        return render_template('allpost.html', title = "My blogs", blog = blog, post_id = post_id)
 
     elif "user" in request.args:
         user_id = request.args.get('user')
         blog = Blog.query.filter_by(owner_id = user_id).all()
-        return render_template('allposts.html', title = "My blogs", blog = blog)
+        return render_template('allpost.html', title = "All my blogs", blog = blog)
 
     else:
         blog = Blog.query.order_by(Blog.id.desc()).all()
-        return render_template('allposts.html', title = "All blogs", blog = blog)
+        return render_template('allpost.html', title = "All blogs", blog = blog)
 
 #sign up page routed from login page
 @app.route('/signup', methods=['POST','GET'])
@@ -174,7 +174,7 @@ def new_post():
             db.session.commit()
             eachblog_id=Blog.query.order_by(Blog.id.desc()).first()
             user=owner
-            return redirect('/blogs')
+            return redirect('/blogs?id={}&user={}'.format(eachblog_id.id,user.username))
 
     return render_template('newblog.html')
 

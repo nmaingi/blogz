@@ -11,7 +11,7 @@ app.secret_key="ngish"
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     title = db.Column(db.String(120))
-    content = db.Column(db.Text())
+    content = db.Column(db.Text(255))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, title, content, owner):
@@ -82,7 +82,7 @@ def blog_listing():
     if "id" in request.args:
         post_id = request.args.get('id')
         blog = Blog.query.filter_by(id = post_id).all()
-        return render_template('allpost.html', title = "My blogs", blog = blog, post_id = post_id)
+        return render_template('allpost.html', title = "This blog", blog = blog, post_id = post_id)
 
     elif "user" in request.args:
         user_id = request.args.get('user')
@@ -144,7 +144,7 @@ def sign_up():
                 new_user = User(username, password)
                 db.session.add(new_user)
                 db.session.commit()
-                username = session['username']              
+                session['username'] = username              
                 return redirect('/newpost')
             else:
                 username_error = "Username is already claimed."
